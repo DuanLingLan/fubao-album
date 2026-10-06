@@ -1,0 +1,26 @@
+{
+  "name": "fubao-album",
+  "version": "1.0.0",
+  "description": "福宝的电子相册",
+  "main": "index.js",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "deploy": "node scripts/deploy.mjs",
+    "curate": "node scripts/curate.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DuanLingLan/fubao-album.git"
+  },
+  "keywords": [],
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/DuanLingLan/fubao-album/issues"
+  },
+  "homepage": "https://github.com/DuanLingLan/fubao-album#readme",
+  "devDependencies": {
+    "page-flip": "^2.0.7",
+    "subset-font": "^2.9.0"
+  },
+  "private": true
+}

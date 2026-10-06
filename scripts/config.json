@@ -1,0 +1,10 @@
+{
+  "sourceDir": "D:/Pictures/Fubao",
+  "indexJson": "D:/照片索引/手机DCIM/index.json",
+  "selectionFile": "scripts/selection.json",
+  "longEdge": 1600,
+  "targetSize": 280000,
+  "maxBytes": 300000,
+  "lqipSize": 16,
+  "birthday": "2025-05-22"
+}
