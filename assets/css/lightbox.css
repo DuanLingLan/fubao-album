@@ -10,7 +10,7 @@
 
 #lb-topbar {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 10px 14px; color: #cfc4ad; font-size: 13px;
+  padding: calc(10px + env(safe-area-inset-top, 0px)) 14px 10px; color: #cfc4ad; font-size: 13px;
   flex: none; z-index: 2;
 }
 #lb-actions { display: flex; gap: 8px; align-items: center; }
