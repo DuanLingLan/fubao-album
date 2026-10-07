@@ -85,7 +85,9 @@ export class AlbumBook {
     this.pf = new PageFlip(this.container, {
       width: 550, height: 730,
       size: 'stretch',
-      minWidth: 280, maxWidth: 1400, minHeight: 380, maxHeight: 1500,
+      minWidth: 280, maxWidth: 1400, minHeight: 100, maxHeight: 1500,
+      // 容器尺寸已由 CSS 决定：autoSize 会按 width/height 比例给外层加 padding，短屏下撑出滚动区
+      autoSize: false,
       usePortrait: true,
       showCover: true,
       drawShadow: true,

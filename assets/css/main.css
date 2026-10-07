@@ -51,7 +51,7 @@ body {
 
 /* ---- 顶部进度条 ---- */
 #progress-bar {
-  position: fixed; top: 0; left: 0; right: 0; height: 5px; z-index: 60;
+  position: fixed; top: env(safe-area-inset-top, 0px); left: 0; right: 0; height: 5px; z-index: 60;
   background: transparent; cursor: pointer;
 }
 #progress-fill {
@@ -61,10 +61,12 @@ body {
   transition: width 0.3s ease;
   box-shadow: 0 0 4px var(--shadow);
 }
+/* 细条只有 5px，手指难以点中：向外扩出一圈透明热区 */
+#progress-bar::before { content: ''; position: absolute; left: 0; right: 0; top: -8px; bottom: -10px; }
 
 /* ---- 底部工具栏 ---- */
 #toolbar {
-  position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%);
+  position: fixed; bottom: calc(10px + env(safe-area-inset-bottom, 0px)); left: 50%; transform: translateX(-50%);
   display: flex; gap: 2px; z-index: 60;
   background: var(--toolbar-bg);
   backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
@@ -81,6 +83,10 @@ body {
   font-size: 10px; line-height: 1;
 }
 #toolbar button svg { width: 19px; height: 19px; }
+@media (pointer: coarse) {
+  #toolbar { gap: 0; padding: 4px 4px; }
+  #toolbar button { padding: 7px 12px 6px; }
+}
 #toolbar button:hover { color: var(--ink); background: rgba(160, 130, 80, 0.12); }
 #toolbar button.active { color: var(--accent); }
 #toolbar button.active .wave { opacity: 1; }
@@ -188,7 +194,7 @@ body {
 
 /* ---- toast ---- */
 #toast {
-  position: fixed; top: 18px; left: 50%; transform: translateX(-50%); z-index: 100;
+  position: fixed; top: calc(18px + env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%); z-index: 100;
   background: var(--toolbar-bg); backdrop-filter: blur(8px);
   border: 1px solid var(--panel-border); color: var(--ink);
   padding: 8px 18px; border-radius: 10px; font-size: 13px;
@@ -208,4 +214,9 @@ body.slideshow { cursor: none; }
   #toolbar button { padding: 7px 10px; }
   #toolbar button svg { width: 21px; height: 21px; }
   #gallery-grid { grid-template-columns: repeat(auto-fill, minmax(105px, 1fr)); gap: 8px; }
+}
+
+/* 横屏手机：竖向空间紧张，收窄留白给书本 */
+@media (max-height: 560px) {
+  #book-view { padding: 6px 8px 64px; }
 }

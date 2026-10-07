@@ -12,9 +12,15 @@ if (!staged) {
   console.log('[i] 无变更，跳过提交');
   process.exit(0);
 }
-const n = staged.split('\n').filter(f => f.startsWith('photos/')).length;
+const count = (filter) => git(['diff', '--cached', '--name-only', `--diff-filter=${filter}`])
+  .trim().split('\n').filter(f => f.startsWith('photos/')).length;
+const added = count('A');
+const removed = count('D');
 const date = new Date().toISOString().slice(0, 10);
-const msg = n > 0 ? `album: +${n} photos (${date})` : `album: update (${date})`;
+const parts = [];
+if (added) parts.push(`+${added}`);
+if (removed) parts.push(`-${removed}`);
+const msg = parts.length ? `album: ${parts.join(' ')} photos (${date})` : `album: update (${date})`;
 git(['commit', '-m', msg]);
 console.log(`[i] 已提交: ${msg}`);
 git(['push'], { stdio: 'inherit' });
