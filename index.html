@@ -2,20 +2,75 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>福宝的相册</title>
-<style>
-  body { margin:0; height:100vh; display:flex; align-items:center; justify-content:center;
-         background:#f5efe3; font-family:"PingFang SC","Microsoft YaHei",sans-serif; color:#7a5c3e; }
-  .card { text-align:center; }
-  h1 { font-size:2rem; letter-spacing:.3em; margin-bottom:.5em; }
-  p { opacity:.7; }
-</style>
+<meta name="description" content="福宝 — 一只虎斑猫的电子相册">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><g fill='%23a5804c'><ellipse cx='50' cy='62' rx='24' ry='19'/><ellipse cx='24' cy='38' rx='10' ry='13'/><ellipse cx='43' cy='28' rx='10' ry='14'/><ellipse cx='62' cy='28' rx='10' ry='14'/><ellipse cx='79' cy='40' rx='10' ry='13'/></g></svg>">
+<link rel="stylesheet" href="assets/css/main.css">
+<link rel="stylesheet" href="assets/css/book.css">
+<link rel="stylesheet" href="assets/css/lightbox.css">
 </head>
 <body>
-<div class="card">
-  <h1>福宝</h1>
-  <p>相册正在制作中…</p>
+
+<div id="progress-bar" title="点击跳转"><div id="progress-fill"></div></div>
+
+<main id="app">
+  <section id="book-view">
+    <div id="book-wrap">
+      <div id="book"></div>
+    </div>
+  </section>
+
+  <section id="gallery-view" hidden>
+    <div id="gallery-head">
+      <button id="gallery-back" class="ghost-btn">&#8592; 返回相册</button>
+      <div id="tag-chips"></div>
+    </div>
+    <div id="gallery-grid"></div>
+  </section>
+</main>
+
+<nav id="toolbar" aria-label="相册工具栏">
+  <button data-act="toc" title="目录 / 时间轴"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg><span>目录</span></button>
+  <button data-act="tags" title="按标签浏览"><svg viewBox="0 0 24 24"><path d="M4 4h7l9 9-7 7-9-9V4z" stroke="currentColor" stroke-width="2" fill="none" stroke-linejoin="round"/><circle cx="8" cy="8" r="1.4" fill="currentColor"/></svg><span>标签</span></button>
+  <button data-act="random" title="随机一张"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3" stroke="currentColor" stroke-width="2" fill="none"/><circle cx="9" cy="9" r="1.3" fill="currentColor"/><circle cx="15" cy="15" r="1.3" fill="currentColor"/><circle cx="15" cy="9" r="1.3" fill="currentColor"/><circle cx="9" cy="15" r="1.3" fill="currentColor"/></svg><span>随机</span></button>
+  <button data-act="slideshow" title="幻灯片播放"><svg viewBox="0 0 24 24"><path d="M8 5l11 7-11 7V5z" stroke="currentColor" stroke-width="2" fill="none" stroke-linejoin="round"/></svg><span>幻灯</span></button>
+  <button data-act="night" title="夜间模式"><svg viewBox="0 0 24 24"><path d="M20 14.5A8.5 8.5 0 019.5 4a8.5 8.5 0 1010.5 10.5z" stroke="currentColor" stroke-width="2" fill="none" stroke-linejoin="round"/></svg><span>夜间</span></button>
+  <button data-act="sound" title="翻页音效"><svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9H4z" stroke="currentColor" stroke-width="2" fill="none" stroke-linejoin="round"/><path class="wave" d="M16 8.5a5 5 0 010 7" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg><span>音效</span></button>
+</nav>
+
+<aside id="toc-drawer" hidden>
+  <div id="toc-head">
+    <h2>目录 · 时间轴</h2>
+    <button id="toc-close" aria-label="关闭">&#10005;</button>
+  </div>
+  <div id="toc-list"></div>
+</aside>
+<div id="drawer-mask" hidden></div>
+
+<div id="resume-bar" hidden>
+  <span id="resume-text"></span>
+  <button id="resume-go">回到上次</button>
+  <button id="resume-dismiss" aria-label="忽略">&#10005;</button>
 </div>
+
+<div id="lightbox" hidden>
+  <div id="lb-topbar">
+    <span id="lb-date"></span>
+    <span id="lb-actions">
+      <button id="lb-share" title="分享这张照片">分享</button>
+      <a id="lb-download" title="下载图片" download>下载</a>
+      <button id="lb-close" aria-label="关闭">&#10005;</button>
+    </span>
+  </div>
+  <div id="lb-stage"><img id="lb-img" alt="" draggable="false"></div>
+  <div id="lb-caption"></div>
+  <button id="lb-prev" class="lb-nav" aria-label="上一张">&#8249;</button>
+  <button id="lb-next" class="lb-nav" aria-label="下一张">&#8250;</button>
+</div>
+
+<div id="toast" hidden></div>
+
+<script type="module" src="assets/js/main.js"></script>
 </body>
 </html>

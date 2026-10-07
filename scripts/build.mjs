@@ -36,6 +36,9 @@ for (const row of indexData?.rows ?? []) {
 }
 
 const captions = loadJson(CAPTIONS_FILE, {});
+// 保留键 months：章节文案（值为字符串或 {text}），不作为照片 id 处理
+const monthCaps = captions.months ?? {};
+delete captions.months;
 
 // ---------- 2. 待处理文件清单 ----------
 const sourceDir = cfg.sourceDir;
@@ -129,7 +132,7 @@ for (const f of files) {
   photos[id] = {
     date: date ?? '',
     month: date ? date.slice(0, 7) : 'unknown',
-    desc: cap.desc ?? row?.desc ?? '',
+    desc: cap.desc ?? '',
     tags: cap.tags ?? row?.tags ?? ['待补充'],
     layout: cap.layout ?? null,
     w: dims.w, h: dims.h,
@@ -162,7 +165,8 @@ const monthKeys = [...byMonth.keys()].sort();
 for (const mk of monthKeys) {
   const list = byMonth.get(mk);
   months.push({ month: mk, label: monthLabel(mk), startPage: pages.length, count: list.length });
-  pages.push({ i: pages.length, type: 'divider', month: mk, label: monthLabel(mk) });
+  const mc = monthCaps[mk];
+  pages.push({ i: pages.length, type: 'divider', month: mk, label: monthLabel(mk), count: list.length, text: typeof mc === 'string' ? mc : mc?.text ?? '' });
 
   let buf = [];
   const flush = () => {
@@ -208,6 +212,7 @@ async function subsetFont() {
   const addText = s => { for (const ch of s ?? '') chars.add(ch); };
   for (const p of Object.values(photos)) { addText(p.desc); for (const t of p.tags) addText(t); }
   for (const c of Object.values(captions)) { addText(c.desc); for (const t of c.tags ?? []) addText(t); }
+  for (const v of Object.values(monthCaps)) addText(typeof v === 'string' ? v : v?.text);
   for (const m of months) addText(m.label);
   addText('福宝的相册距离岁生日还有天今天啦刚到家第一年换春夏秋冬睡觉玩耍吃饭好奇慵懒小喵爪印目录时间轴标签全部推荐随机一张幻灯片夜间模式分享下载关闭返回上次看到第页封面');
   // GB2312 一级汉字（区位 16-55），保证后补文案不缺字

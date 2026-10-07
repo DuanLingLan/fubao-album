@@ -1,0 +1,60 @@
+/* ===== Lightbox 大图查看 ===== */
+#lightbox {
+  position: fixed; inset: 0; z-index: 90;
+  background: rgba(12, 10, 7, 0.96);
+  display: flex; flex-direction: column;
+  animation: lb-in 0.22s ease;
+  touch-action: none;
+}
+@keyframes lb-in { from { opacity: 0; } to { opacity: 1; } }
+
+#lb-topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 14px; color: #cfc4ad; font-size: 13px;
+  flex: none; z-index: 2;
+}
+#lb-actions { display: flex; gap: 8px; align-items: center; }
+#lb-actions button, #lb-actions a {
+  background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #ddd2bb; padding: 5px 13px; border-radius: 8px; cursor: pointer;
+  font-size: 12.5px; font-family: var(--ui); text-decoration: none;
+  transition: background 0.15s;
+}
+#lb-actions button:hover, #lb-actions a:hover { background: rgba(255, 255, 255, 0.18); }
+#lb-close { font-size: 14px !important; padding: 5px 10px !important; }
+
+#lb-stage {
+  flex: 1; min-height: 0; position: relative; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+}
+#lb-img {
+  max-width: 96%; max-height: 100%; object-fit: contain;
+  transform-origin: center center;
+  transition: transform 0.18s ease;
+  will-change: transform;
+  user-select: none; -webkit-user-select: none;
+}
+#lb-img.no-transition { transition: none; }
+
+#lb-caption {
+  flex: none; text-align: center; padding: 8px 20px calc(14px + env(safe-area-inset-bottom, 0px));
+  color: #b8ab90; font-family: var(--hand); font-size: 17px; letter-spacing: 0.04em;
+  min-height: 20px;
+}
+
+.lb-nav {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  width: 52px; height: 90px; z-index: 3;
+  background: none; border: none; cursor: pointer;
+  color: rgba(230, 220, 200, 0.5); font-size: 52px; line-height: 1;
+  display: flex; align-items: center; justify-content: center;
+  transition: color 0.15s;
+}
+.lb-nav:hover { color: rgba(240, 230, 210, 0.95); }
+#lb-prev { left: 4px; }
+#lb-next { right: 4px; }
+
+@media (max-width: 560px) {
+  .lb-nav { width: 40px; height: 70px; font-size: 40px; }
+  #lb-caption { font-size: 15px; }
+}
