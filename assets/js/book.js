@@ -44,16 +44,41 @@ export class AlbumBook {
     this.container.addEventListener('pointerdown', (e) => {
       this._down = { x: e.clientX, y: e.clientY, t: Date.now() };
     }, true);
+    // 轻触（非拖拽）：照片开大图，书页左右边缘翻页
     this.container.addEventListener('click', (e) => {
-      const card = e.target.closest?.('.photo-card');
-      if (!card || !this._down) return;
+      if (!this._down) return;
       const dx = Math.abs(e.clientX - this._down.x), dy = Math.abs(e.clientY - this._down.y);
       const dt = Date.now() - this._down.t;
-      if (dx < 10 && dy < 10 && dt < 450) {
+      if (dx >= 10 || dy >= 10 || dt >= 450) return;
+      if (e.target.closest?.('.page.cover')) return; // 封面：轻触翻开，交给页面自己的监听
+      const card = e.target.closest?.('.photo-card');
+      if (card) {
         e.stopPropagation();
         this.hooks.openPhoto?.(card.dataset.id);
+        return;
       }
+      const zone = this._tapZone(e.clientX);
+      if (!zone) return;
+      e.stopPropagation();
+      zone === 'l' ? this.prev() : this.next();
     }, true);
+  }
+
+  // 翻页热区只贴可见书页的最左/最右 10%，中间留给照片本身
+  _tapZone(x) {
+    const box = this.container.getBoundingClientRect();
+    // 翻完的旧页可能仍是 display:block 但被移到视野外，按与容器的交集剔掉
+    const rects = [...this.container.querySelectorAll('.stf__item')]
+      .filter(e => e.style.display === 'block')
+      .map(e => e.getBoundingClientRect())
+      .filter(r => r.right > box.left && r.left < box.right);
+    if (!rects.length) return null;
+    const left = Math.max(box.left, Math.min(...rects.map(r => r.left)));
+    const right = Math.min(box.right, Math.max(...rects.map(r => r.right)));
+    const edge = Math.min(80, Math.max(36, (right - left) * 0.1));
+    if (x <= left + edge) return 'l';
+    if (x >= right - edge) return 'r';
+    return null;
   }
 
   _detectOrientation() {

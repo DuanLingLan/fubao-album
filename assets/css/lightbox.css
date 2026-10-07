@@ -26,13 +26,15 @@
 #lb-stage {
   flex: 1; min-height: 0; position: relative; overflow: hidden;
   display: flex; align-items: center; justify-content: center;
+  user-select: none; -webkit-user-select: none;
 }
 #lb-img {
   max-width: 96%; max-height: 100%; object-fit: contain;
   transform-origin: center center;
   transition: transform 0.18s ease;
   will-change: transform;
-  user-select: none; -webkit-user-select: none;
+  /* 长按保存依赖系统菜单，图片本身不能禁选/禁呼出 */
+  user-select: auto; -webkit-user-select: auto; -webkit-touch-callout: default;
 }
 #lb-img.no-transition { transition: none; }
 

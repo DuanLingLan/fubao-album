@@ -2,7 +2,7 @@
 import { navigate } from './router.js';
 
 const LS = {
-  page: 'fubao.page', theme: 'fubao.theme', sound: 'fubao.sound',
+  page: 'fubao.page', theme: 'fubao.theme', sound: 'fubao.sound', tapHint: 'fubao.tapHint',
 };
 
 function toast(msg, ms = 2600) {
@@ -35,6 +35,8 @@ export class UI {
     this.app = app; // { manifest, book, lightbox, gallery }
     this.slideshowTimer = null;
     this._resumeSaveTimer = null;
+    this.installEvt = null;
+    this.installBtn = null;
     this.audio = new Audio('assets/audio/page-turn.mp3');
     this.audio.volume = 0.35;
     this.audioLoaded = false;
@@ -50,6 +52,15 @@ export class UI {
     this.fillTitlePage();
     this.maybeShowResume();
     this.updateProgress(this.app.book.getCurrentPage());
+    window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); this.installEvt = e; });
+    this._maybeHintTap();
+  }
+
+  // 触屏首次访问时提示一次轻触翻页
+  _maybeHintTap() {
+    if (localStorage.getItem(LS.tapHint) || !matchMedia('(pointer: coarse)').matches) return;
+    localStorage.setItem(LS.tapHint, '1');
+    setTimeout(() => toast('轻触画面左右边缘可翻页 · 点照片看大图'), 1800);
   }
 
   // ---- 扉页：倒计时 + 今日推荐 ----
@@ -161,8 +172,40 @@ export class UI {
       const first = m.pages.find(p => p.type === 'photos' && p.month === mo.month)?.photos[0];
       mkItem(mo.label, `${mo.count} 张`, first ? m.photos[first] : null, () => navigate(`/month/${mo.month}`));
     }
+    this._bindInstall(list);
+  }
+
+  // ---- 添加到主屏幕（PWA 入口）----
+  _installHTML() {
+    const ua = navigator.userAgent;
+    const tip = this.installEvt ? '一键安装，之后离线也能翻'
+      : /iPhone|iPad|iPod/i.test(ua) ? 'Safari：分享 → 添加到主屏幕'
+      : '浏览器菜单 ⋮ → 添加到主屏幕';
+    return `<span class="toc-thumb" style="display:flex;align-items:center;justify-content:center;color:#a5804c">
+      <svg viewBox="0 0 24 24" width="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M12 7v6.5m0 0L9.6 11.2M12 13.5l2.4-2.3"/><path d="M9.5 18.5h5"/></svg>
+      </span><span><span class="toc-label">${this.installEvt ? '安装到主屏幕' : '添加到主屏幕'}</span><div class="toc-count">${tip}</div></span>`;
+  }
+
+  _bindInstall(list) {
+    const standalone = window.navigator.standalone === true
+      || matchMedia('(display-mode: standalone)').matches;
+    if (standalone || /MicroMessenger|QQ\//i.test(navigator.userAgent)) return; // 已安装 / 微信内装不了
+    const b = document.createElement('button');
+    b.className = 'toc-item';
+    b.innerHTML = this._installHTML();
+    b.addEventListener('click', async () => {
+      if (!this.installEvt) { toast(/iPhone|iPad|iPod/i.test(navigator.userAgent) ? '点 Safari 底部分享按钮 → 添加到主屏幕' : '点浏览器菜单 → 添加到主屏幕'); return; }
+      this.installEvt.prompt();
+      await this.installEvt.userChoice;
+      this.installEvt = null;
+      this.closeDrawer();
+    });
+    list.appendChild(b);
+    this.installBtn = b;
   }
   openDrawer() {
+    if (this.installBtn) this.installBtn.innerHTML = this._installHTML();
     document.getElementById('toc-drawer').hidden = false;
     document.getElementById('drawer-mask').hidden = false;
   }
