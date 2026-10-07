@@ -61,8 +61,8 @@ body {
   transition: width 0.3s ease;
   box-shadow: 0 0 4px var(--shadow);
 }
-/* 细条只有 5px，手指难以点中：向外扩出一圈透明热区 */
-#progress-bar::before { content: ''; position: absolute; left: 0; right: 0; top: -8px; bottom: -10px; }
+/* 细条只有 5px，手指难以点中：向外扩出一圈透明热区（下沿留少，别压到书页顶边） */
+#progress-bar::before { content: ''; position: absolute; left: 0; right: 0; top: -8px; bottom: -4px; }
 
 /* ---- 底部工具栏 ---- */
 #toolbar {

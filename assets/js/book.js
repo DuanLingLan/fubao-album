@@ -40,28 +40,50 @@ export class AlbumBook {
       if (e.key === 'ArrowRight' || e.key === 'PageDown') this.next();
       else if (e.key === 'ArrowLeft' || e.key === 'PageUp') this.prev();
     });
-    // 点击 vs 拖拽判定
-    this.container.addEventListener('pointerdown', (e) => {
-      this._down = { x: e.clientX, y: e.clientY, t: Date.now() };
+    // 点击 vs 拖拽判定：记下按下点（pointerdown 覆盖鼠标和触屏，touchstart 兜底老 WebView）
+    const noteDown = (x, y) => { this._down = { x, y, t: Date.now() }; };
+    this.container.addEventListener('pointerdown', (e) => noteDown(e.clientX, e.clientY), true);
+    this.container.addEventListener('touchstart', (e) => {
+      const t = e.touches[0];
+      if (t) noteDown(t.clientX, t.clientY);
     }, true);
-    // 轻触（非拖拽）：照片开大图，书页左右边缘翻页
+    // page-flip 在 touchstart 上 preventDefault（mobileScrollSupport:false），触屏拿不到 click，
+    // 所以触摸走 touchend（它也排在库自身的 userStop 之后，不会打断库的动画），鼠标走 click
+    this.container.addEventListener('touchend', (e) => {
+      const t = e.changedTouches[0];
+      if (!t) return;
+      this._tapAt = Date.now();
+      this._onTap(t.clientX, t.clientY, e.target);
+    }, true);
     this.container.addEventListener('click', (e) => {
-      if (!this._down) return;
-      const dx = Math.abs(e.clientX - this._down.x), dy = Math.abs(e.clientY - this._down.y);
-      const dt = Date.now() - this._down.t;
-      if (dx >= 10 || dy >= 10 || dt >= 450) return;
-      if (e.target.closest?.('.page.cover')) return; // 封面：轻触翻开，交给页面自己的监听
-      const card = e.target.closest?.('.photo-card');
-      if (card) {
-        e.stopPropagation();
-        this.hooks.openPhoto?.(card.dataset.id);
-        return;
-      }
-      const zone = this._tapZone(e.clientX);
-      if (!zone) return;
-      e.stopPropagation();
-      zone === 'l' ? this.prev() : this.next();
+      if (Date.now() - (this._tapAt || 0) < 800) return;
+      this._onTap(e.clientX, e.clientY, e.target);
     }, true);
+  }
+
+  _onTap(x, y, target) {
+    if (!this._down) return;
+    const dx = Math.abs(x - this._down.x), dy = Math.abs(y - this._down.y);
+    const dt = Date.now() - this._down.t;
+    if (dx >= 14 || dy >= 14 || dt >= 600) return;
+    const page = target?.closest?.('.page');
+    if (page?.classList.contains('cover')) { // 封面：轻触翻开
+      this.next();
+      return;
+    }
+    const pick = target?.closest?.('#tp-today');
+    if (pick?.dataset.photo) {
+      this.hooks.openPhoto?.(pick.dataset.photo);
+      return;
+    }
+    const card = target?.closest?.('.photo-card');
+    if (card) {
+      this.hooks.openPhoto?.(card.dataset.id);
+      return;
+    }
+    const zone = this._tapZone(x);
+    if (!zone) return;
+    zone === 'l' ? this.prev() : this.next();
   }
 
   // 翻页热区只贴可见书页的最左/最右 10%，中间留给照片本身
@@ -156,7 +178,6 @@ export class AlbumBook {
         <div class="cover-paw" style="color:#d8b578">${PAW_SVG}</div>
       </div>
       <div class="cover-hint">轻触翻开</div>`;
-    page.addEventListener('click', () => this.next());
     return page;
   }
 

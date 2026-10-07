@@ -82,12 +82,12 @@ export class UI {
       const id = dailyPick(Object.keys(m.photos));
       const p = m.photos[id];
       if (p) {
+        todayEl.dataset.photo = id; // 点击由 book.js 的统一轻触处理接住（书页内 click 在触屏不触发）
         todayEl.innerHTML = `<img src="${p.lqip}" data-full="${p.file}" class="lqip-mode" alt="今日推荐"><div class="tp-today-label">今日推荐${p.desc ? ' · ' + esc(p.desc.slice(0, 22)) : ''}</div>`;
         const img = todayEl.querySelector('img');
         const full = new Image();
         full.onload = () => { img.src = full.src; img.classList.remove('lqip-mode'); };
         full.src = p.file;
-        todayEl.addEventListener('click', () => this.app.lightbox.open(id));
       }
     }
   }
