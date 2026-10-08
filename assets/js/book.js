@@ -128,7 +128,6 @@ export class AlbumBook {
 
   _create(startPage) {
     const pages = this._buildPageEls();
-    const isMobile = this._lastOrientation === 'portrait';
     this.pf = new PageFlip(this.container, {
       width: 550, height: 730,
       size: 'stretch',
@@ -137,12 +136,14 @@ export class AlbumBook {
       autoSize: false,
       usePortrait: true,
       showCover: true,
-      drawShadow: true,
-      maxShadowOpacity: isMobile ? 0.3 : 0.5,
-      flippingTime: 650,
+      // 翻页途中不再画投影：软卷边的投影会把照片压暗一块
+      drawShadow: false,
+      flippingTime: 420,
       mobileScrollSupport: false,
       useMouseEvents: true,
-      showPageCorners: true,
+      // 关掉悬停卷角：鼠标扫过书页四角（约 200px 范围）就折出一个小角，
+      // 既和照片抢注意力，卷出的几何还会顶出文档、闪出滚动条
+      showPageCorners: false,
       disableFlipByClick: true,
     });
     this.pf.loadFromHTML(pages);

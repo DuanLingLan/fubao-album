@@ -34,7 +34,9 @@ html[data-theme='night'] {
 
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
-html, body { height: 100%; }
+/* 整站是固定视口布局（画廊/抽屉/大图各自内部滚动）。翻页动画途中书页会临时超出视口，
+   不锁死文档滚动就会出现一闪一闪的滚动条 */
+html, body { height: 100%; overflow: hidden; }
 body {
   margin: 0;
   font-family: var(--ui);
