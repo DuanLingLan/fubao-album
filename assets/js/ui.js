@@ -13,14 +13,15 @@ function toast(msg, ms = 2600) {
   toast._timer = setTimeout(() => { t.hidden = true; }, ms);
 }
 
-function countdown(birthday) {
+// 周岁 + 过了生日之后的整天数（生日当天 days=0，且那天就是新的整岁）
+function age(birthday) {
   const [by, bm, bd] = birthday.split('-').map(Number);
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  let next = new Date(today.getFullYear(), bm - 1, bd);
-  if (today > next) next = new Date(today.getFullYear() + 1, bm - 1, bd);
-  const days = Math.round((next - today) / 86400000);
-  return { days, age: next.getFullYear() - by, isToday: days === 0 };
+  let years = today.getFullYear() - by;
+  let anniv = new Date(today.getFullYear(), bm - 1, bd);
+  if (today < anniv) { years--; anniv = new Date(anniv.getFullYear() - 1, bm - 1, bd); }
+  return { years, days: Math.round((today - anniv) / 86400000) };
 }
 
 function dailyPick(ids) {
@@ -63,15 +64,15 @@ export class UI {
     setTimeout(() => toast('轻触画面左右边缘可翻页 · 点照片看大图'), 1800);
   }
 
-  // ---- 扉页：倒计时 + 今日推荐 ----
+  // ---- 扉页：年龄 + 今日推荐 ----
   fillTitlePage() {
     const m = this.app.manifest;
-    const cd = countdown(m.birthday);
+    const a = age(m.birthday);
     const cdEl = document.getElementById('tp-countdown');
     if (cdEl) {
-      cdEl.textContent = cd.isToday
-        ? `今天是福宝 ${cd.age} 岁生日！生日快乐！`
-        : `距离福宝 ${cd.age} 岁生日还有 ${cd.days} 天`;
+      cdEl.textContent = a.days === 0 ? `今天是福宝 ${a.years} 岁生日！生日快乐！`
+        : a.years === 0 ? `福宝今天 ${a.days} 天啦`      // 未满周岁只报天数
+        : `福宝今天 ${a.years} 岁 ${a.days} 天啦`;
     }
     const stats = document.getElementById('tp-stats');
     if (stats) stats.textContent = `${m.photoCount} 张照片 · ${m.months.length} 个月份 · 记录于 ${m.months[0]?.label ?? ''} 至 ${m.months[m.months.length - 1]?.label ?? ''}`;

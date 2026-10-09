@@ -93,7 +93,7 @@ node scripts/deploy.mjs          git add/commit/push → GitHub Pages
 |---|---|
 | `index.html` | 唯一页面，hash 路由 |
 | `assets/js/` | `main.js` 启动，`book.js` 翻页书，`lightbox.js` 大图，`ui.js` 工具栏/抽屉，`router.js` 路由，`gallery.js` 标签墙 |
-| `assets/vendor/page-flip.esm.js` | vendored [StPageFlip](https://github.com/Nodws/StPageFlip) v2.0.7，带两处补丁：`disableFlipByClick` 可编程绕过、竖屏宽度二次钳制 |
+| `assets/vendor/page-flip.esm.js` | vendored [StPageFlip](https://github.com/Nodws/StPageFlip) v2.0.7，带四处本地补丁：`disableFlipByClick` 连角落点击一起禁掉、竖屏宽度二次钳制、换页动画压成 0 帧（翻页无动画）、封面/末页不再用硬壳画法（否则相邻软页会被永久改成 hard，悬停卷角会变成整页跟随鼠标） |
 | `assets/css/` | `main.css` 主题与布局，`book.css` 书页，`lightbox.css` 大图层 |
 | `assets/fonts/` | 马善政楷书子集（构建时按实际用到的字生成，源 ttf 不入库） |
 | `data/manifest.json` | 构建产物：页面序列 + 照片元数据 + LQIP |
@@ -115,7 +115,7 @@ npm run curate                 # 选片 + 文案工具（8124）
 ## 手机端注意
 
 - 翻页两种方式：**左右拖/滑**（保留），以及**轻触画面最左/最右 10%**（约 36–80px 的贴边热区）翻上/下一页；点照片本身 = 进大图，两者不冲突。
-- 翻页动画走「简化」配置：420ms、不画投影、关掉悬停卷角（鼠标扫过书角不再凭空折角）；`html, body` 锁死溢出，动画途中不会再闪出滚动条。长按书页角落也只会翻一页（`assets/vendor/page-flip.esm.js` 里有一处本地补丁，见文件内注释）。
+- 点边缘/卷角/键盘翻页 = **瞬间换页，没有翻页动画**（vendor 补丁 #3：把「终点是换页」的那段动画压成 0 帧）。悬停书页四角仍会折出卷角预览，卷角折出与鼠标移开后的收回收尾仍带缓动（`flippingTime: 650`，别再调小，低于 ~340ms 卷角会因为超帧而画不出来）。卷角亮着时点在角上的那一下算「翻这一页」，优先级高于开大图。全书统一软页画法（vendor 补丁 #4：`showCover` 不再把封面设成硬壳，否则相邻的「今日推荐」页会被永久改成 hard，悬停时整页绕书脊跟随鼠标）。`html, body` 锁死溢出，动画途中不会再闪出滚动条。长按书页角落也只会翻一页（`assets/vendor/page-flip.esm.js` 里有一处本地补丁，见文件内注释）。
 - 大图页：双指捏合缩放、双击放大、单指拖动平移、左右滑动切换、**长按图片保存**（依赖系统菜单，图片未禁选）。
 - 工具栏、进度条、弹层都按 `env(safe-area-inset-*)` 避让刘海和手势条。
 - 添加到主屏幕：**目录抽屉最下面一行**（安卓/桌面 Chrome 若支持会直接变成「安装到主屏幕」一键弹系统安装框；iOS Safari 则提示走 分享 → 添加到主屏幕）。微信内浏览器装不了，这一行会自动隐藏。

@@ -66,8 +66,15 @@ export class AlbumBook {
     const dx = Math.abs(x - this._down.x), dy = Math.abs(y - this._down.y);
     const dt = Date.now() - this._down.t;
     if (dx >= 14 || dy >= 14 || dt >= 600) return;
+    // 卷角正亮着且点在这个角上 = 翻这一页。必须排在封面判定之前：
+    // 往回翻的卷角，折起来的那个元素本身就是 .page.cover（它盖在左半边），
+    // 先判封面的话「点左角回封面」会被当成点封面翻开 → 反而往前翻一页。
+    if (this._onCurl(x, y)) {
+      this._turnBySide(x);
+      return;
+    }
     const page = target?.closest?.('.page');
-    if (page?.classList.contains('cover')) { // 封面：轻触翻开
+    if (page?.classList.contains('cover') && this.getCurrentPage() === 0) { // 停在封面时：轻触翻开
       this.next();
       return;
     }
@@ -86,20 +93,46 @@ export class AlbumBook {
     zone === 'l' ? this.prev() : this.next();
   }
 
-  // 翻页热区只贴可见书页的最左/最右 10%，中间留给照片本身
-  _tapZone(x) {
+  // 悬停卷角（fold_corner）状态 + 点落在库的角判定框里
+  _onCurl(x, y) {
+    if (!this.pf || this.pf.getState() !== 'fold_corner') return false;
+    const fc = this.pf.getFlipController();
+    // 库用 .stf__block（事件绑定元素）的相对坐标判定，四角 sqrt(pageW²+H²)/5 的方块
+    const box = (this.container.querySelector('.stf__block') || this.container).getBoundingClientRect();
+    return !!fc?.isPointOnCorners({ x: x - box.left, y: y - box.top });
+  }
+
+  _turnBySide(x) {
+    const s = this._spread();
+    if (!s) return;
+    x < (s.left + s.right) / 2 ? this.prev() : this.next();
+  }
+
+  // 可见书页的最左/最右 + 边缘热区宽度
+  _spread() {
     const box = this.container.getBoundingClientRect();
-    // 翻完的旧页可能仍是 display:block 但被移到视野外，按与容器的交集剔掉
+    // 只量静止页：折起来的那页带 transform，getBoundingClientRect 会跟着飞走，
+    // 而它的布局盒（offsetLeft）又会落到书本框之外（往回翻时封面的 offsetLeft 是 0），
+    // 混进来会把左边缘热区推到视口外，点书页最左边反而没反应。
     const rects = [...this.container.querySelectorAll('.stf__item')]
-      .filter(e => e.style.display === 'block')
-      .map(e => e.getBoundingClientRect())
+      .filter(e => e.style.display === 'block' && !e.style.transform)
+      .map(e => {
+        const p = (e.offsetParent || this.container).getBoundingClientRect();
+        return { left: p.left + e.offsetLeft, right: p.left + e.offsetLeft + e.offsetWidth };
+      })
       .filter(r => r.right > box.left && r.left < box.right);
     if (!rects.length) return null;
     const left = Math.max(box.left, Math.min(...rects.map(r => r.left)));
     const right = Math.min(box.right, Math.max(...rects.map(r => r.right)));
-    const edge = Math.min(80, Math.max(36, (right - left) * 0.1));
-    if (x <= left + edge) return 'l';
-    if (x >= right - edge) return 'r';
+    return { left, right, edge: Math.min(80, Math.max(36, (right - left) * 0.1)) };
+  }
+
+  // 翻页热区只贴可见书页的最左/最右 10%，中间留给照片本身
+  _tapZone(x) {
+    const s = this._spread();
+    if (!s) return null;
+    if (x <= s.left + s.edge) return 'l';
+    if (x >= s.right - s.edge) return 'r';
     return null;
   }
 
@@ -128,6 +161,7 @@ export class AlbumBook {
 
   _create(startPage) {
     const pages = this._buildPageEls();
+    const isMobile = this._lastOrientation === 'portrait';
     this.pf = new PageFlip(this.container, {
       width: 550, height: 730,
       size: 'stretch',
@@ -136,14 +170,16 @@ export class AlbumBook {
       autoSize: false,
       usePortrait: true,
       showCover: true,
-      // 翻页途中不再画投影：软卷边的投影会把照片压暗一块
-      drawShadow: false,
-      flippingTime: 420,
+      // 投影只为悬停卷角提供明暗
+      drawShadow: true,
+      maxShadowOpacity: isMobile ? 0.35 : 0.5,
+      // 卷角预览与回位的时长。别调小：库按「距离/1000×本值」排帧，卷角位移只有 ~50px，
+      // 本值低于 ~340ms 时首个 rAF 就冲过终点，而 render() 越界时只收尾不补末帧 → 卷角画不出来
+      flippingTime: 650,
       mobileScrollSupport: false,
       useMouseEvents: true,
-      // 关掉悬停卷角：鼠标扫过书页四角（约 200px 范围）就折出一个小角，
-      // 既和照片抢注意力，卷出的几何还会顶出文档、闪出滚动条
-      showPageCorners: false,
+      // 卷角折出的几何仍会顶出视口，由 html,body{overflow:hidden} 兜住，不会再闪滚动条
+      showPageCorners: true,
       disableFlipByClick: true,
     });
     this.pf.loadFromHTML(pages);
